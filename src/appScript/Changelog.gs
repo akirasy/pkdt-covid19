@@ -1,6 +1,6 @@
 function aboutLicense() {
-  var title = 'Open Source';
-  var subtitle = `
+  let title = 'Open Source';
+  let subtitle = `
     This app is open source and free to use under the terms of GNU General Public License v3.0.
 
     Copyright (C) 2021  akirasy
@@ -19,19 +19,19 @@ function aboutLicense() {
 }
 
 function aboutAuthor() {
-  var title = 'AppScript Author';
-  var subtitle = `
+  let title = 'AppScript Author';
+  let subtitle = `
     This app is developed by akirasy <fitri.abakar@gmail.com>
     
     Feel free to browse other app here --> https://github.com/akirasy
-    For this specific app source, look here --> https://gist.github.com/akirasy/f249851b524b0da82ed9b62f5edb5639
+    For this specific app source, look here --> https://github.com/akirasy/pkdt-covid19
   `;
   SpreadsheetApp.getUi().alert(title, subtitle, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 function aboutGoogleAppScript() {
-  var title = 'Google AppScript';
-  var subtitle = `
+  let title = 'Google AppScript';
+  let subtitle = `
     Google Apps Script is a rapid application development platform that makes it 
     fast and easy to create business applications that integrate with Google Workspace. 
     

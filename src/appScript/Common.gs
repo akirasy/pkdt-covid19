@@ -1,26 +1,25 @@
 function getVarSource() {
   // init var from sheet: {appScript.gs}
-  var sheet_var_source          = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('appScript.gs');
+  let sheet_var_source          = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('appScript.gs');
 
-  var spreadsheet_owner         = sheet_var_source.getRange('B14').getValue();
-  var spreadsheet_uac_id        = sheet_var_source.getRange('B15').getValue();
+  let spreadsheet_owner         = sheet_var_source.getRange('B14').getValue();
+  let spreadsheet_uac_id        = sheet_var_source.getRange('B15').getValue();
   
-  var sheet_kes_positif         = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheet_var_source.getRange('B4').getValue());
-  var sheet_kes_positif_archive = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheet_var_source.getRange('B5').getValue());
-  var sheet_laporan_epid        = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheet_var_source.getRange('B6').getValue());
-  var sheet_laporan_cac         = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheet_var_source.getRange('B7').getValue());
-  var sheet_cac_pending         = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheet_var_source.getRange('B8').getValue());
+  let sheet_kes_positif         = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheet_var_source.getRange('B4').getValue());
+  let sheet_kes_positif_archive = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheet_var_source.getRange('B5').getValue());
+  let sheet_laporan_epid        = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheet_var_source.getRange('B6').getValue());
+  let sheet_laporan_cac         = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheet_var_source.getRange('B7').getValue());
+  let sheet_cac_pending         = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheet_var_source.getRange('B8').getValue());
 
-  var path_clerking_template    = sheet_var_source.getRange('B11').getValue();
-  var path_tlh_folder           = sheet_var_source.getRange('B12').getValue();
+  let path_clerking_template    = sheet_var_source.getRange('B11').getValue();
+  let path_tlh_folder           = sheet_var_source.getRange('B12').getValue();
   
-  var range_tlh_prefix          = sheet_var_source.getRange('B13');
-  var range_tlh_max             = sheet_var_source.getRange('B18');
-  var range_tlh_folder_today    = sheet_var_source.getRange('B19');
-  var range_today_date          = sheet_var_source.getRange('B20');
+  let range_tlh_prefix          = sheet_var_source.getRange('B13');
+  let range_tlh_max             = sheet_var_source.getRange('B18');
+  let range_tlh_folder_today    = sheet_var_source.getRange('B19');
+  let range_today_date          = sheet_var_source.getRange('B20');
 
-
-  var var_source_json = {
+  let var_source_json = {
     'spreadsheet_owner'         : spreadsheet_owner,
     'spreadsheet_uac_id'        : spreadsheet_uac_id,
     'sheet_kes_positif'         : sheet_kes_positif,
@@ -39,150 +38,134 @@ function getVarSource() {
   return var_source_json;
 }
 
-function getPatientInfo(rowid) {
-  // init var from sheet: {appScript.gs}
-  var var_source = getVarSource();
+function getPatientInfo(rowid, var_source) {
+  // retrieve patient_info from {kes positif}
+  let selected_patient = SpreadsheetApp.getActiveSheet().getRange(rowid, 1, 1, var_source.sheet_kes_positif.getMaxColumns()).getValues();
+  let selected_patient_values = selected_patient[0].map(item => { return parseDate(item) });
 
-  // retrieve information from {kes positif}
-  var selected_patient = SpreadsheetApp.getActiveSheet().getRange(rowid, 1, 1, var_source.sheet_kes_positif.getMaxColumns());
-  var patient_info_json = {
-    'tindakan_tarikh'               : parseDate(selected_patient.getValues()[0][0]),
-    'tindakan_kk_referral'          : selected_patient.getValues()[0][1],
-    'tindakan_pegawai_referral'     : selected_patient.getValues()[0][2],
-    'tindakan_pegawai_penyiasat'    : selected_patient.getValues()[0][3],
-    'tindakan_catatan'              : selected_patient.getValues()[0][4],
-    'pesakit_id'                    : selected_patient.getValues()[0][5],
-    'pesakit_nama'                  : selected_patient.getValues()[0][6],
-    'pesakit_ic'                    : selected_patient.getValues()[0][7],
-    'pesakit_alamat'                : selected_patient.getValues()[0][8],
-    'pesakit_phone'                 : selected_patient.getValues()[0][9],
-    'keputusan_rdrp'                : selected_patient.getValues()[0][10],
-    'keputusan_n'                   : selected_patient.getValues()[0][11],
-    'keputusan_orf'                 : selected_patient.getValues()[0][12],
-    'keputusan_makmal'              : selected_patient.getValues()[0][13],
-    'logistik_tarikh_dinilai'       : parseDate(selected_patient.getValues()[0][14]),
-    'logistik_umur'                 : selected_patient.getValues()[0][15],
-    'logistik_jantina'              : selected_patient.getValues()[0][16],
-    'logistik_comorbid'             : selected_patient.getValues()[0][17],
-    'logistik_bmi'                  : selected_patient.getValues()[0][18],
-    'logistik_cat'                  : selected_patient.getValues()[0][19],
-    'logistik_admit'                : selected_patient.getValues()[0][20],
-    'logistik_sosial'               : selected_patient.getValues()[0][21],
-    'logistik_catatan'              : selected_patient.getValues()[0][22],
-    'demografi_bangsa'              : selected_patient.getValues()[0][23],
-    'demografi_warganegara'         : selected_patient.getValues()[0][24],
-    'demografi_mukim'               : selected_patient.getValues()[0][25],
-    'demografi_saringan'            : selected_patient.getValues()[0][26],
-    'demografi_pekerjaan'           : selected_patient.getValues()[0][27],
-    'demografi_vaksin_status'       : selected_patient.getValues()[0][28],
-    'demografi_vaksin_satu'         : parseDate(selected_patient.getValues()[0][29]),
-    'demografi_vaksin_dua'          : parseDate(selected_patient.getValues()[0][30]),
-    'demografi_vaksin_tiga'         : parseDate(selected_patient.getValues()[0][31]),
-    'demografi_vaksin_tempat'       : selected_patient.getValues()[0][32],
-    'demografi_vaksin_jenis'        : selected_patient.getValues()[0][33],
-    'demografi_gejala_tarikh'       : parseDate(selected_patient.getValues()[0][34]),
-    'demografi_gejala_jenis'        : selected_patient.getValues()[0][35],
-    'demografi_sampel_satu'         : parseDate(selected_patient.getValues()[0][36]),
-    'demografi_sampel_dua'          : parseDate(selected_patient.getValues()[0][37]),
-    'epid_nama_kluster'             : selected_patient.getValues()[0][38],
-    'epid_nama_indeks'              : selected_patient.getValues()[0][39],
-    'epid_id_indeks'                : selected_patient.getValues()[0][40],
-    'epid_hubungan'                 : selected_patient.getValues()[0][41],
-    'epid_bil_kontak'               : selected_patient.getValues()[0][42],
-    'penyiasat_nama'                : selected_patient.getValues()[0][43],
-    'penyiasat_jawatan'             : selected_patient.getValues()[0][44],
-    'penyiasat_telefon'             : selected_patient.getValues()[0][45],
-    'penyiasat_tarikh'              : parseDate(selected_patient.getValues()[0][46]),
-    'epid_minggu'                   : selected_patient.getValues()[0][47],
-    'epid_status'                   : selected_patient.getValues()[0][48],
-    'epid_sebab_mati'               : selected_patient.getValues()[0][49],
-    'epid_jenis_ujian'              : selected_patient.getValues()[0][50],
-    'epid_sampel_kali'              : selected_patient.getValues()[0][51],
-    'epid_lokal'                    : selected_patient.getValues()[0][52],
-    'epid_origin'                   : selected_patient.getValues()[0][53],
-    'siasatan_url'                  : [selected_patient.getValues()[0][54], 55],
-    'siasatan_status'               : [selected_patient.getValues()[0][55], 56],
-    'reten_epid'                    : [selected_patient.getValues()[0][56], 57],
-    'reten_cac'                     : [selected_patient.getValues()[0][57], 58],
-    'reten_catatan'                 : [selected_patient.getValues()[0][58], 59]
-  }
-  return patient_info_json
-}
+  // make sure number of column is the same as the named_value = commented number at end of line is for reference
+  let named_value = [
+    'tindakan_tarikh'               , // 1 
+    'tindakan_kk_referral'          , // 2
+    'tindakan_pegawai_referral'     , // 3
+    'tindakan_pegawai_penyiasat'    , // 4
+    'tindakan_catatan'              , // 5
+    'pesakit_id'                    , // 6
+    'pesakit_nama'                  , // 7
+    'pesakit_ic'                    , // 8
+    'pesakit_alamat'                , // 9
+    'pesakit_phone'                 , // 10
+    'keputusan_rdrp'                , // 11
+    'keputusan_n'                   , // 12
+    'keputusan_orf'                 , // 13
+    'keputusan_makmal'              , // 14
+    'logistik_tarikh_dinilai'       , // 15
+    'logistik_umur'                 , // 16
+    'logistik_jantina'              , // 17
+    'logistik_comorbid'             , // 18
+    'logistik_bmi'                  , // 19
+    'logistik_cat'                  , // 20
+    'logistik_admit'                , // 21
+    'logistik_sosial'               , // 22
+    'logistik_catatan'              , // 23
+    'demografi_bangsa'              , // 24
+    'demografi_warganegara'         , // 25
+    'demografi_mukim'               , // 26
+    'demografi_saringan'            , // 27
+    'demografi_pekerjaan'           , // 28
+    'demografi_vaksin_status'       , // 29
+    'demografi_vaksin_satu'         , // 30
+    'demografi_vaksin_dua'          , // 31
+    'demografi_vaksin_tiga'         , // 32
+    'demografi_vaksin_tempat'       , // 33
+    'demografi_vaksin_jenis'        , // 34
+    'demografi_gejala_tarikh'       , // 35
+    'demografi_gejala_jenis'        , // 36
+    'demografi_sampel_satu'         , // 37
+    'demografi_sampel_dua'          , // 38
+    'epid_nama_kluster'             , // 39
+    'epid_nama_indeks'              , // 40
+    'epid_id_indeks'                , // 41
+    'epid_hubungan'                 , // 42
+    'epid_bil_kontak'               , // 43
+    'penyiasat_nama'                , // 44
+    'penyiasat_jawatan'             , // 45
+    'penyiasat_telefon'             , // 46
+    'penyiasat_tarikh'              , // 47
+    'epid_minggu'                   , // 48
+    'epid_status'                   , // 49
+    'epid_sebab_mati'               , // 50
+    'epid_jenis_ujian'              , // 51
+    'epid_sampel_kali'              , // 52
+    'epid_lokal'                    , // 53
+    'epid_origin'                   , // 54
+    'generate_now'                  , // 55
+    'siasatan_url'                  , // 56
+    'siasatan_status'               , // 57
+    'reten_epid'                    , // 58
+    'reten_catatan'                 , // 59
+  ]
 
-// Move completed case to archive
-function moveToArchive(selected_range) {
-  var var_source = getVarSource();
-  for (let i = 0; i < selected_range.getNumRows(); i++) {
-    let rowid = selected_range.getRowIndex() + i;
-    Logger.log('Processing rowid: ' + rowid);
-
-    // Check if all are done
-    let patient_info = getPatientInfo(rowid);
-    let reten_cac = patient_info.reten_cac[0];
-    let reten_epid = patient_info.reten_epid[0];
-    let siasatan_status = patient_info.siasatan_status[0];
-
-/*  // Remove CAC function because it is not used
----------------------------------------------------------
-    // Set conditional value
-    let isAllDone = Boolean();
-    if (reten_cac == 'DONE' && reten_epid == 'DONE' && siasatan_status == 'DONE') {
-      isAllDone = true;
-    } else { isAllDone = false; }
-
-    // Set conditional value
-    let isSiasatEpidDone = Boolean();
-    if (reten_epid == 'DONE' && siasatan_status == 'DONE') {
-      isSiasatEpidDone = true;
-    } else { isSiasatEpidDone = false; }    
-
-    // Move completed case to archive
-    if (isAllDone) {
-      Logger.log('All marked as DONE.')
-      let selected_row_range = SpreadsheetApp.getActiveSheet().getRange(rowid, 1, 1, SpreadsheetApp.getActiveSheet().getMaxColumns());
-      let last_archive_range = var_source.sheet_kes_positif_archive.getRange(var_source.sheet_kes_positif_archive.getLastRow() + 1, 1);
-      selected_row_range.copyTo(last_archive_range);
-      selected_row_range.clear();
-      // Mark with color gray
-      selected_row_range.setBackground('#cccccc');
-    } else if (isSiasatEpidDone) {
-      Logger.log('CAC not done yet')
-      let selected_row_range = SpreadsheetApp.getActiveSheet().getRange(rowid, 1, 1, SpreadsheetApp.getActiveSheet().getMaxColumns());
-      let last_cac_range     = var_source.sheet_cac_pending.getRange(var_source.sheet_cac_pending.getLastRow() + 1, 1);
-      selected_row_range.copyTo(last_cac_range);
-      selected_row_range.clear();
-      // Mark with color gray
-      selected_row_range.setBackground('#cccccc');
-    }
---------------------------------------------------------- */
-
-    // Set conditional value
-    let isAllDone = Boolean();
-    if (reten_epid == 'DONE' && siasatan_status == 'DONE') {
-      isAllDone = true;
-    } else { isAllDone = false; }    
-
-    // Move completed case to archive
-    if (isAllDone) {
-      Logger.log('All marked as DONE.')
-      let selected_row_range = SpreadsheetApp.getActiveSheet().getRange(rowid, 1, 1, SpreadsheetApp.getActiveSheet().getMaxColumns());
-      let last_archive_range = var_source.sheet_kes_positif_archive.getRange(var_source.sheet_kes_positif_archive.getLastRow() + 1, 1);
-      selected_row_range.copyTo(last_archive_range);
-      selected_row_range.clear();
-      // Mark with color gray
-      selected_row_range.setBackground('#cccccc');
-    }
-  }
+  // Create string to convert to JSON and set as function return value
+  let patient_info = '{\n';
+  named_value.forEach((name, i) => {
+    patient_info += '"' + name + '" : ["' + selected_patient_values[i] + '", ' + (i+1).toString() + '],\n';
+  })
+  patient_info += '"end" : ["", 0]\n}';
+  return JSON.parse(patient_info);
 }
 
 // Check if date to parse toDateString()
 function parseDate(arg) {
+  let output = '';
   if (arg instanceof Date) { 
-    var arg_input = new Date(arg);
-    var output = arg_input.getDate() + '/' + (arg_input.getMonth() + 1) + '/' + arg_input.getFullYear();
-
-  } else { 
-    var output = arg;
-  }
+    let arg_input = new Date(arg);
+    output = arg_input.getDate() + '/' + (arg_input.getMonth() + 1) + '/' + arg_input.getFullYear();
+  } else { output = arg }
   return output;
+}
+
+// Change lowercase to uppercase
+function toUpperCase() {
+  let activeSheet = SpreadsheetApp.getActiveSheet();
+  let selected_range = activeSheet.getActiveRange();
+  let data_list = selected_range.getValues();
+  for (let i = 0; i < data_list.length; i++) {
+    for (let j = 0; j < data_list[i].length; j++) {
+      if (!(data_list[i][j] instanceof Date)) {
+        data_list[i][j] = data_list[i][j].toString().toUpperCase();
+      }
+    }
+  }
+  selected_range.setValues(data_list);
+}
+
+// Convert newline value to oneline only
+function toOneLine() {
+  let activeSheet = SpreadsheetApp.getActiveSheet();
+  let selected_range = activeSheet.getActiveRange();
+  let data_list = selected_range.getValues();
+  for (let i = 0; i < data_list.length; i++) {
+    for (let j = 0; j < data_list[i].length; j++) {
+      if (!(data_list[i][j] instanceof Date)) {
+        data_list[i][j] = data_list[i][j].toString().replace(/\n/g, '  ');
+      }
+    }
+  }
+  selected_range.setValues(data_list).trimWhitespace();
+}
+
+// Removes dashes, star, spaces and apostrophy
+function cleanIc() {
+  let activeSheet = SpreadsheetApp.getActiveSheet();
+  let selected_range = activeSheet.getActiveRange();
+  let data_list = selected_range.getValues();
+  for (let i = 0; i < data_list.length; i++) {
+    for (let j = 0; j < data_list[i].length; j++) {
+      if (!(data_list[i][j] instanceof Date)) {
+        data_list[i][j] = data_list[i][j].toString().replace(/[-|\'|\*|\s]/g,'');
+      }
+    }
+  }
+  selected_range.setValues(data_list);
 }

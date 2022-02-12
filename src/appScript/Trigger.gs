@@ -1,7 +1,7 @@
 function triggerGenerateBorangSiasatan() {
   let var_source = getVarSource();
   let generate_now_column = getPatientInfo(1, var_source).generate_now[1];
-  let all_row_range = var_source.sheet_kes_positif.getRange(1, generate_now_column, var_source.sheet_kes_positif.getLastRow());
+  let all_row_range = var_source.sheet_kes_positif.getRange(4, generate_now_column, var_source.sheet_kes_positif.getLastRow());
   Logger.log('===== Searching for row to be generated =====');
   let to_generate = new Array();
   for (let i = 0; i < all_row_range.getNumRows(); i++) {
@@ -31,6 +31,6 @@ function triggerRemoveUnlistedUser() {
 
 function triggerMoveToArchive() {
   let var_source = getVarSource();
-  let selected_range = var_source.sheet_kes_positif.getRange(1, 1, var_source.sheet_kes_positif.getLastRow());
+  let selected_range = var_source.sheet_kes_positif.getRange(4, 1, var_source.sheet_kes_positif.getLastRow());
   moveToArchive(selected_range);
 }

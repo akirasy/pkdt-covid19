@@ -72,14 +72,14 @@ function removeUnlistedUser() {
 // Move completed case to archive
 function moveToArchive(selected_range) {
   let var_source = getVarSource();
-  for (let i = 0; i < selected_range.getNumRows(); i++) {
-    let rowid = selected_range.getRowIndex() + i;
 
+  let forloop_start = selected_range.getRowIndex();
+  let forloop_end = forloop_start + selected_range.getNumRows();
+  for (let rowid = forloop_start; rowid < forloop_end; rowid++) {
     // Check if all are done
     let patient_info = getPatientInfo(rowid, var_source);
     let reten_epid = patient_info.reten_epid[0];
     let siasatan_status = patient_info.siasatan_status[0];
-
     // Set conditional value
     let isAllDone = Boolean();
     if (reten_epid == 'DONE' && siasatan_status == 'DONE') {

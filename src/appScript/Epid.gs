@@ -2,15 +2,42 @@ function writeTlhNumber(rowid) {
   let var_source = getVarSource();
   let tlh_column = getPatientInfo(4, var_source).pesakit_id[1];
 
-  // increment tlh_max by 1
-  let tlh_generated = var_source.range_tlh_max.getValue() + 1;
+  let tlh_generated = 0;
+  let reuse = reuseTlhNumber();
+  if (reuse[0]) {
+    // use un-used tlh number
+    tlh_generated = reuse[1];
+  } else {
+    // increment tlh_max by 1
+    tlh_generated = var_source.range_tlh_max.getValue() + 1;
+    // update tlh_max
+    var_source.range_tlh_max.setValue(tlh_generated);
+  }
+
   // write to target
   let target = var_source.sheet_kes_positif.getRange(rowid, tlh_column);
   target.setValue(var_source.range_tlh_prefix.getValue() + tlh_generated);
-  // update tlh_max
-  var_source.range_tlh_max.setValue(tlh_generated);
   
   return var_source.range_tlh_prefix.getValue() + tlh_generated
+}
+
+function reuseTlhNumber() {
+  let var_source = getVarSource();
+  let is_available = false;
+
+  // get unused tlh number from appscript.gs
+  let all_unused_number = var_source.range_unused_tlh.getValues();
+  let unused_number = all_unused_number.shift();
+
+  // if no unused number, just return false
+  if (unused_number != "") {
+    is_available = true;
+    var_source.range_unused_tlh.clear();
+    let target = var_source.sheet_var_source.getRange(var_source.range_unused_tlh.getRowIndex(), var_source.range_unused_tlh.getColumn(), all_unused_number.length);
+    target.setValues(all_unused_number);
+  } else { is_available = false }
+
+  return [is_available, unused_number]
 }
 
 function generateLaporanEpid() {

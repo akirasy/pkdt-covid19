@@ -81,22 +81,25 @@ function mainGenerateLaporanEpid() {
 function selectGrayEmpty() {
   let var_source = getVarSource();
   let greyed_A1_list = new Array();
-  let all_row_range = var_source.sheet_kes_positif.getRange(1, var_source.sheet_kes_positif.getMaxColumns(), var_source.sheet_kes_positif.getLastRow());
+  let sheet_max_column = var_source.sheet_kes_positif.getMaxColumns();
+  let all_row_range = var_source.sheet_kes_positif.getRange(4, sheet_max_column, var_source.sheet_kes_positif.getLastRow());
   
   Logger.log('Searching for greyed row')
-  for (let i = 0; i < all_row_range.getNumRows(); i++) {
-    let rowid = all_row_range.getRowIndex() + i;
-    let target = var_source.sheet_kes_positif.getRange(rowid,var_source.sheet_kes_positif.getMaxColumns());
+  let forloop_start = all_row_range.getRowIndex();
+  let forloop_end = forloop_start + all_row_range.getNumRows();
+  for (let rowid = forloop_start; rowid < forloop_end; rowid++) {
+    let target = var_source.sheet_kes_positif.getRange(rowid,sheet_max_column);
     if (target.getBackground() == '#cccccc') {
       Logger.log('--- Found at row: ' + rowid);
-      let greyed_row_A1 = var_source.sheet_kes_positif.getRange(rowid, 1, 1, var_source.sheet_kes_positif.getMaxColumns()).getA1Notation();
+      let greyed_row_A1 = var_source.sheet_kes_positif.getRange(rowid, 1, 1, sheet_max_column).getA1Notation();
       greyed_A1_list.push(greyed_row_A1);
     }
   }
+
   if (greyed_A1_list.length != 0) {
     var_source.sheet_kes_positif.getRangeList(greyed_A1_list).activate();
-    Logger.log('--- Greyed row activated')
-  } else { Logger.log('--- No greyed row found') }
+    Logger.log('Greyed row activated')
+  } else { Logger.log('No greyed row found') }
 }
 
 function mainMoveToArchive() {
@@ -178,11 +181,11 @@ function setValidationAndFormatting() {
     {'name'  : 'generate_now'    , 'range' : 'BC:BC', 'validation_list' : ['YA']},
   ]
   Logger.log('Setting up data validations.');
-  for (let i = 0; i < validation_collection_dropdown.length; i++) {
-    let target_range = SpreadsheetApp.getActiveSheet().getRange(validation_collection_dropdown[i].range);
-    let target_rule = SpreadsheetApp.newDataValidation().requireValueInList(validation_collection_dropdown[i].validation_list, true).build();
-    target_range.setDataValidation(target_rule);
-  }
+  validation_collection_dropdown.forEach(item => {
+    let target_range = SpreadsheetApp.getActiveSheet().getRange(item.range);
+    let target_rule = SpreadsheetApp.newDataValidation().requireValueInList(item.validation_list, true).build();
+    target_range.setDataValidation(target_rule);    
+  })
 
   // Data validation - reject invalid date
   let validation_collection_date = [
@@ -193,13 +196,13 @@ function setValidationAndFormatting() {
     {'name' : 'date_report'   , 'range' : 'AU:AU'},
   ]
   Logger.log('Setting up date formatting and validations.');
-  for (let i = 0; i < validation_collection_date.length; i++) {
-    let target_range = SpreadsheetApp.getActiveSheet().getRange(validation_collection_date[i].range);
+  validation_collection_date.forEach(item => {
+    let target_range = SpreadsheetApp.getActiveSheet().getRange(item.range);
     let target_rule = SpreadsheetApp.newDataValidation().requireDate().setAllowInvalid(false).setHelpText('Use this format -> d mmm yyyy (eg. 12 Sep 2021, 25 Aug 2021)').build();
-    target_range.setDataValidation(target_rule);
-  }
+    target_range.setDataValidation(target_rule);    
+  })
 
-  Logger.log('Celaring data validation at header.');
+  Logger.log('Clearing data validation at header.');
   let range_header = SpreadsheetApp.getActiveSheet().getRange('1:3');
   range_header.clearDataValidations();
 }

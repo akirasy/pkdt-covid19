@@ -1,5 +1,6 @@
 // Create topbar menu
 function onOpen() {
+  Logger.log('Run by user: ' + Session.getEffectiveUser().getEmail());
   SpreadsheetApp.getUi()
   .createMenu('Admin')
   .addItem('🕸 Set Google permission', 'aquireGooglePermission')
@@ -59,9 +60,11 @@ function mainInfoSegeraPenyiasat() {
 function mainGenerateBorangSiasatan() {
   let rowid = SpreadsheetApp.getCurrentCell().getRowIndex();
   generateBorangSiasatan(rowid);
+  Logger.log('Run by user: ' + Session.getEffectiveUser().getEmail());
 }
 
 function mainGenerateLaporanEpid() {
+  Logger.log('Run by user: ' + Session.getEffectiveUser().getEmail());
   let ui = SpreadsheetApp.getUi();
   let result = ui.alert(
      'Reserved function',
@@ -80,25 +83,23 @@ function mainGenerateLaporanEpid() {
 
 function selectGrayEmpty() {
   let var_source = getVarSource();
-  let greyed_A1_list = new Array();
   let sheet_max_column = var_source.sheet_kes_positif.getMaxColumns();
-  let all_row_range = var_source.sheet_kes_positif.getRange(4, sheet_max_column, var_source.sheet_kes_positif.getLastRow());
-  
-  Logger.log('Searching for greyed row')
-  let forloop_start = all_row_range.getRowIndex();
-  let forloop_end = forloop_start + all_row_range.getNumRows();
-  for (let rowid = forloop_start; rowid < forloop_end; rowid++) {
-    let target = var_source.sheet_kes_positif.getRange(rowid,sheet_max_column);
-    if (target.getBackground() == '#cccccc') {
-      Logger.log('--- Found at row: ' + rowid);
-      let greyed_row_A1 = var_source.sheet_kes_positif.getRange(rowid, 1, 1, sheet_max_column).getA1Notation();
-      greyed_A1_list.push(greyed_row_A1);
-    }
-  }
+  let all_row_range = var_source.sheet_kes_positif.getRange(1, sheet_max_column, var_source.sheet_kes_positif.getMaxRows());
 
-  if (greyed_A1_list.length != 0) {
-    var_source.sheet_kes_positif.getRangeList(greyed_A1_list).activate();
-    Logger.log('Greyed row activated')
+  let greyed_A1 = new Array();
+  let rowid_colours = all_row_range.getBackgrounds().map((item, index) => { return [(index+1), item[0]] });
+  rowid_colours.map(item => {
+    if (item[1] == '#cccccc' ) {
+      let target_A1_value = var_source.sheet_kes_positif.getRange(item[0], 1, 1, sheet_max_column).getA1Notation();
+      greyed_A1.push(target_A1_value);
+    }
+  })
+
+  if (greyed_A1.length != 0) {
+    Logger.log('Total greyed row found: ' + greyed_A1.length);
+    Logger.log('--- Activating rows...');
+    var_source.sheet_kes_positif.getRangeList(greyed_A1).activate();
+    Logger.log('--- Greyed row activated');
   } else { Logger.log('No greyed row found') }
 }
 
@@ -167,14 +168,14 @@ function setValidationAndFormatting() {
   let validation_collection_dropdown = [
     {'name'  : 'kk_refer'        , 'range' : 'B:B'  , 'validation_list' : ['KKBM','KKT', 'KKTL', 'KKL', 'KKS', 'KKK', 'KKKT', 'KKK', 'KKKK', 'LUAR DAERAH']},
     {'name'  : 'gender'          , 'range' : 'Q:Q'  , 'validation_list' : ['Lelaki','Perempuan']},
-    {'name'  : 'covid_cat'       , 'range' : 'T:T'  , 'validation_list' : ['CAT 1', 'CAT 2 (mild)', 'CAT 2 (moderate)', 'CAT 3', 'CAT 4', 'CAT 5']},
+    {'name'  : 'covid_cat'       , 'range' : 'T:T'  , 'validation_list' : ['CAT 1', 'CAT 2A', 'CAT 2B', 'CAT 3', 'CAT 4', 'CAT 5']},
     {'name'  : 'warganegara'     , 'range' : 'Y:Y'  , 'validation_list' : ['YA', 'TIDAK']},
     {'name'  : 'jenis_saringan'  , 'range' : 'AA:AA', 'validation_list' : ['BERGEJALA', 'KONTAK RAPAT', 'BERSASAR', 'KENDIRI', 'SARINGAN PEKERJAAN', 'SARINGAN PENGEMBARA', 'PRE-ADMISSION']},
     {'name'  : 'status_vaksin'   , 'range' : 'AC:AC', 'validation_list' : ['LENGKAP', 'TIDAK LENGKAP', 'TIADA VAKSIN']},
     {'name'  : 'jenis_vaksin'    , 'range' : 'AH:AH', 'validation_list' : ['TIADA', 'PFIZER', 'CANSINO', 'SINOVAC', 'ASTRA ZENECA']},
     {'name'  : 'epid_status'     , 'range' : 'AW:AW', 'validation_list' : ['HIDUP', 'MATI']},
     {'name'  : 'epid_mati'       , 'range' : 'AX:AX', 'validation_list' : ['N/A']},
-    {'name'  : 'jenis_sampel'    , 'range' : 'AY:AY', 'validation_list' : ['RT-PCR', 'RAPID MOLECULAR', 'RTK-Ag']},
+    {'name'  : 'jenis_sampel'    , 'range' : 'AY:AY', 'validation_list' : ['RT-PCR', 'RAPID MOLECULAR', 'RTK-Ag', 'RTK-Saliva']},
     {'name'  : 'sampel_kali'     , 'range' : 'AZ:AZ', 'validation_list' : ['PERTAMA', 'KEDUA', 'KETIGA']},
     {'name'  : 'punca_jangkitan' , 'range' : 'BA:BA', 'validation_list' : ['LOKAL', 'IMPORT A', 'IMPORT B', 'IMPORT C']},
     {'name'  : 'jangkitan_origin', 'range' : 'BB:BB', 'validation_list' : ['N/A']},

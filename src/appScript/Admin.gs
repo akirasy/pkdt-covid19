@@ -32,6 +32,29 @@ function addListedUser() {
   } else { Logger.log('--- No new user found') }
 }
 
+function removeOneUser() {
+  let gmail_address = 'kerdautemerloh2011@gmail.com';
+  SpreadsheetApp.getActiveSpreadsheet().removeEditor(gmail_address);
+  SpreadsheetApp.getActiveSpreadsheet().removeViewer(gmail_address);
+  DriveApp.getFolderById(getVarSource().path_tlh_folder).removeViewer(gmail_address);
+  DriveApp.getFolderById(getVarSource().path_tlh_folder).removeEditor(gmail_address);
+}
+
+function removeAllUser() {
+  let var_source = getVarSource();
+  let active_spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  let drive_folder = DriveApp.getFolderById(var_source.path_tlh_folder);
+
+  let current_editor = active_spreadsheet.getEditors();
+  let current_editor_list = current_editor.map(user => { return user.getEmail() });
+  current_editor_list.forEach(user => {
+    active_spreadsheet.removeEditor(user);
+    active_spreadsheet.removeViewer(user);
+    drive_folder.removeEditor(user);
+    Logger.log('User removed: ' + user);
+  })
+}
+
 function removeUnlistedUser() {
   let var_source = getVarSource();
   Logger.log('Get actual user in spreadsheet.');

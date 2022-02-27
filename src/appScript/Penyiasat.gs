@@ -24,7 +24,7 @@ function generateBorangSiasatan(rowid) {
     }
 
     // ---- begin to generate file ----
-    Logger.log('Begin to generate file');
+    Logger.log('Begin to generate file for row: ' + rowid);
     Logger.log('--- Generate filename');
     let doc_filename = patient_info.pesakit_nama[0];
 

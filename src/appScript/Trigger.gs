@@ -1,27 +1,29 @@
 function triggerGenerateBorangSiasatan() {
   let var_source = getVarSource();
-  let generate_now_column = getPatientInfo(1, var_source).generate_now[1];
-  let all_row_range = var_source.sheet_kes_positif.getRange(1, generate_now_column, var_source.sheet_kes_positif.getLastRow());
-  Logger.log('===== Searching for row to be generated =====');
-  let to_generate = new Array();
+  let patient_info = getPatientInfo(1, var_source);
 
-  let all_row_range_values = all_row_range.getValues().map((item, index) => { return [(index+1),item[0]] });
-  all_row_range_values.forEach(item => {
+  // Collect
+  let generate_sekarang_values = var_source.sheet_kes_positif
+    .getRange(1, patient_info.generate_sekarang[1], var_source.sheet_kes_positif.getLastRow()).getValues()
+    .map((item, index) => { return [(index+1), item[0]] });
+
+  // Select
+  let selection_criteria = new Array();
+  generate_sekarang_values.map((item, index) => {
     if (item[1] == 'YA') {
-      to_generate.push(item[0]);
+      selection_criteria.push(item[0]);
     }
   })
+  Logger.log('--- Total case selected: ' + selection_criteria.length);
 
-  if (to_generate.length != 0) {
-    Logger.log('Found row: ' + to_generate.length);
-    Logger.log('===== Generating Borang Siasatan =====');
-    to_generate.forEach(item => {
-      Logger.log('--- Looking at rowid: ' + item);
+  // Operate with exec_limit
+  selection_criteria.map((item, index) => {
+    let exec_limit = 15;
+    if (index < exec_limit) {
       generateBorangSiasatan(item);
-      Logger.log('--- Set value generate_now to empty')
-      var_source.sheet_kes_positif.getRange(item, generate_now_column).setValue('');    
-    })
-  } else { Logger.log('--- No request for generate found') }
+      var_source.sheet_kes_positif.getRange(item, patient_info.generate_sekarang[1]).setValue('');
+    }   
+  })
 }
 
 function triggerAddListedUser() {
@@ -34,6 +36,30 @@ function triggerRemoveUnlistedUser() {
 
 function triggerMoveToArchive() {
   let var_source = getVarSource();
-  let selected_range = var_source.sheet_kes_positif.getRange(4, 1, var_source.sheet_kes_positif.getLastRow());
-  moveToArchive(selected_range);
+  let patient_info = getPatientInfo(1, var_source);
+
+  // Collect
+  let status_siasatan_done_values = var_source.sheet_kes_positif
+    .getRange(1, patient_info.status_siasatan[1], var_source.sheet_kes_positif.getLastRow()).getValues()
+    .map((item, index) => { return [(index+1), item[0]] });
+  let epid_daerah_done_values = var_source.sheet_kes_positif
+    .getRange(1, patient_info.epid_daerah[1], var_source.sheet_kes_positif.getLastRow()).getValues()
+    .map((item, index) => { return [(index+1), item[0]] });
+
+  // Select
+  let selection_criteria = new Array();
+  status_siasatan_done_values.map((item, index) => {
+    if (status_siasatan_done_values[index][1] == 'DONE' && epid_daerah_done_values[index][1] == 'DONE') {
+      selection_criteria.push(item[0]);    
+    }
+  })
+  Logger.log('--- Total case selected: ' + selection_criteria.length);
+
+  // Operate with exec_limit
+  selection_criteria.map((item, index) => {
+    let exec_limit = 100;
+    if (index < exec_limit) {
+      moveCaseToArchive(item, var_source);
+    }   
+  })
 }

@@ -4,7 +4,7 @@ function getVarSource() {
   let sheet_var_source          = active_spreadsheet.getSheetByName('appScript.gs');
 
   let spreadsheet_owner         = sheet_var_source.getRange('B14').getValue();
-  let spreadsheet_uac_id        = sheet_var_source.getRange('B15').getValue();
+  let request_access_form_id    = sheet_var_source.getRange('B15').getValue();
   let spreadsheet_archive_id    = sheet_var_source.getRange('B16').getValue();
   
   let sheet_kes_positif         = active_spreadsheet.getSheetByName(sheet_var_source.getRange('B4').getValue());
@@ -20,12 +20,12 @@ function getVarSource() {
   let range_tlh_max             = sheet_var_source.getRange('B19');
   let range_tlh_folder_today    = sheet_var_source.getRange('B20');
   let range_today_date          = sheet_var_source.getRange('B21');
-  let range_unused_tlh          = sheet_var_source.getRange('D4:D72');
+  let range_unused_tlh          = sheet_var_source.getRange('D4:D40');
 
   let var_source_json = {
     'sheet_var_source'          : sheet_var_source,
     'spreadsheet_owner'         : spreadsheet_owner,
-    'spreadsheet_uac_id'        : spreadsheet_uac_id,
+    'request_access_form_id'    : request_access_form_id,
     'spreadsheet_archive_id'    : spreadsheet_archive_id,
     'sheet_kes_positif'         : sheet_kes_positif,
     'sheet_kes_positif_archive' : sheet_kes_positif_archive,
@@ -76,25 +76,26 @@ function getPatientInfo(rowid, var_source) {
     'status_vaksin'           : [selected_patient_values[24], 25],
     'jenis_vaksin'            : [selected_patient_values[25], 26],
     'admit'                   : [selected_patient_values[26], 27],
-    'bangsa'                  : [selected_patient_values[27], 28],
-    'warganegara'             : [selected_patient_values[28], 29],
-    'mukim'                   : [selected_patient_values[29], 30],
-    'jenis_saringan'          : [selected_patient_values[30], 31],
-    'pekerjaan'               : [selected_patient_values[31], 32],
-    'tarikh_onset'            : [selected_patient_values[32], 33],
-    'jenis_gejala'            : [selected_patient_values[33], 34],
-    'catatan_siasatan'        : [selected_patient_values[34], 35],
-    'nama_kes_indeks'         : [selected_patient_values[35], 36],
-    'bilangan_kontak_rapat'   : [selected_patient_values[36], 37],
-    'kategori_jangkitan'      : [selected_patient_values[37], 38],
-    'tarikh_siasatan'         : [selected_patient_values[38], 39],
-    'nama_penyiasat'          : [selected_patient_values[39], 40],
-    'jawatan_penyiasat'       : [selected_patient_values[40], 41],
-    'generate_sekarang'       : [selected_patient_values[41], 42],
-    'url_siasatan'            : [selected_patient_values[42], 43],
-    'status_siasatan'         : [selected_patient_values[43], 44],
-    'epid_daerah'             : [selected_patient_values[44], 45],
-    'catatan_epid'            : [selected_patient_values[45], 46]
+    'rawatan_paxlovid'        : [selected_patient_values[27], 28],
+    'bangsa'                  : [selected_patient_values[28], 29],
+    'warganegara'             : [selected_patient_values[29], 30],
+    'mukim'                   : [selected_patient_values[30], 31],
+    'jenis_saringan'          : [selected_patient_values[31], 32],
+    'pekerjaan'               : [selected_patient_values[32], 33],
+    'tarikh_onset'            : [selected_patient_values[33], 34],
+    'jenis_gejala'            : [selected_patient_values[34], 35],
+    'catatan_siasatan'        : [selected_patient_values[35], 36],
+    'nama_kes_indeks'         : [selected_patient_values[36], 37],
+    'bilangan_kontak_rapat'   : [selected_patient_values[37], 38],
+    'kategori_jangkitan'      : [selected_patient_values[38], 39],
+    'tarikh_siasatan'         : [selected_patient_values[39], 40],
+    'nama_penyiasat'          : [selected_patient_values[40], 41],
+    'jawatan_penyiasat'       : [selected_patient_values[41], 42],
+    'generate_sekarang'       : [selected_patient_values[42], 43],
+    'url_siasatan'            : [selected_patient_values[43], 44],
+    'status_siasatan'         : [selected_patient_values[44], 45],
+    'epid_daerah'             : [selected_patient_values[45], 46],
+    'catatan_epid'            : [selected_patient_values[46], 47]
   }
   return patient_info_json
 }

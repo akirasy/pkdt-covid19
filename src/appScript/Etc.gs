@@ -31,12 +31,13 @@ function setValidationAndFormatting() {
   let validation_collection_dropdown = [
     {'name'  : 'kk_referral'      , 'range' : 'B:B'  , 'validation_list' : ['KKBM','KKT', 'KKTL', 'KKL', 'KKS', 'KKK', 'KKKT', 'KKK', 'KKKK', 'HOSHAS','LUAR DAERAH']},
     {'name'  : 'covid_category'   , 'range' : 'X:X'  , 'validation_list' : ['CAT 1', 'CAT 2A', 'CAT 2B', 'CAT 3', 'CAT 4', 'CAT 5']},
-    {'name'  : 'status_vaksin'    , 'range' : 'Y:Y'  , 'validation_list' : ['TIADA','TIDAK LENGKAP', 'LENGKAP', 'BOOSTER']},
-    {'name'  : 'jenis_vaksin'     , 'range' : 'Z:Z'  , 'validation_list' : ['TIADA', 'PFIZER', 'CANSINO', 'SINOVAC', 'ASTRA ZENECA']},
-    {'name'  : 'warganegara'      , 'range' : 'AC:AC', 'validation_list' : ['YA', 'TIDAK']},    
-    {'name'  : 'jenis_saringan'   , 'range' : 'AE:AE', 'validation_list' : ['BERGEJALA', 'KONTAK RAPAT', 'BERSASAR', 'KENDIRI', 'SARINGAN PEKERJAAN', 'SARINGAN PENGEMBARA', 'PRE-ADMISSION']},
-    {'name'  : 'punca_jangkitan'  , 'range' : 'AL:AL', 'validation_list' : ['LOKAL', 'IMPORT A', 'IMPORT B', 'IMPORT C']},
-    {'name'  : 'generate_sekarang', 'range' : 'AP:AP', 'validation_list' : ['YA']},
+    {'name'  : 'status_vaksin'    , 'range' : 'Y:Y'  , 'validation_list' : ['TIDAK VAKSIN','TIDAK LENGKAP', 'LENGKAP', 'BOOSTER']},
+    {'name'  : 'jenis_vaksin'     , 'range' : 'Z:Z'  , 'validation_list' : ['NA', 'PFIZER', 'CANSINO', 'SINOVAC', 'ASTRA ZENECA']},
+    {'name'  : 'rawatan_paxlovid' , 'range' : 'AB:AB', 'validation_list' : ['YA', 'TIDAK', 'REFUSED']},
+    {'name'  : 'warganegara'      , 'range' : 'AD:AD', 'validation_list' : ['MALAYSIA', 'BWN']},    
+    {'name'  : 'jenis_saringan'   , 'range' : 'AF:AF', 'validation_list' : ['SARINGAN BERGEJALA', 'SARINGAN KONTAK RAPAT', 'BERSASAR', 'SARINGAN KENDIRI', 'SARINGAN PEKERJAAN', 'SARINGAN PENGEMBARA', 'SARINGAN PRE-ADMISSION']},
+    {'name'  : 'punca_jangkitan'  , 'range' : 'AM:AM', 'validation_list' : ['LOKAL', 'IMPORT A', 'IMPORT B', 'IMPORT C']},
+    {'name'  : 'generate_sekarang', 'range' : 'AQ:AQ', 'validation_list' : ['YA']},
   ]
   Logger.log('Setting up data validations.');
   validation_collection_dropdown.forEach(item => {
@@ -50,8 +51,8 @@ function setValidationAndFormatting() {
     {'name' : 'tarikh_notifikasi' , 'range' : 'A:A'  , 'number_format' : 'd mmm'},
     {'name' : 'tarikh_sampel'     , 'range' : 'M:M'  , 'number_format' : 'd mmm'},
     {'name' : 'tarikh_dinilai'    , 'range' : 'T:T'  , 'number_format' : 'd mmm'},
-    {'name' : 'tarikh_onset'      , 'range' : 'AG:AG', 'number_format' : 'd mmm'},
-    {'name' : 'tarikh_siasatan'   , 'range' : 'AM:AM', 'number_format' : 'd mmm'},
+    {'name' : 'tarikh_onset'      , 'range' : 'AH:AH', 'number_format' : 'd mmm'},
+    {'name' : 'tarikh_siasatan'   , 'range' : 'AN:AN', 'number_format' : 'd mmm'},
   ]
   Logger.log('Setting up date formatting and validations.');
   validation_collection_date.forEach(item => {
@@ -66,9 +67,30 @@ function setValidationAndFormatting() {
   range_header.clearDataValidations();
 }
 
+// Password protected function
+function promptPassword() {
+  Logger.log('Waiting for user input: Yes/No');
+  var ui = SpreadsheetApp.getUi();
+  var response = ui.prompt('Password protected function', 'Please enter password.', ui.ButtonSet.YES_NO);
+
+  // Process the user's response.
+  let allow_usage = new Boolean();
+  let correct_password = response.getResponseText() == '123qwe';
+  if (response.getSelectedButton() == ui.Button.YES && correct_password) {
+    allow_usage = true;
+  } else if (response.getSelectedButton() == ui.Button.NO) {
+    allow_usage = false;
+    ui.alert('Thank you', 'Script exited safely.', ui.ButtonSet.OK);
+  } else {
+    allow_usage = false;
+    ui.alert('Access denied', 'Wrong password!', ui.ButtonSet.OK);;
+  }
+  return allow_usage
+}
+
 // Prompt user to verify identity
 function promptAdminUserOnly() {
-  Logger.log('Waiting for user input: Yes/No')
+  Logger.log('Waiting for user input: Yes/No');
   let ui = SpreadsheetApp.getUi();
   let result = ui.alert(
      'Reserved function',

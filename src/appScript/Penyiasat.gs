@@ -1,42 +1,36 @@
-function generateBorangSiasatan(rowid, clerking_template_id) {
-  let var_source = getVarSource();
-  if (!clerking_template_id) { 
+function generateBorangSiasatan(rowid, var_source, clerking_template_id) {
+  Logger.log('Begin to generate file for row: ' + rowid);
+
+  // STEP 0 : Initializing variables
+  if (!clerking_template_id) {  // enable bulk generation
     clerking_template_id = var_source.path_clerking_template 
   }
   let target_folder_id = var_source.path_tlh_folder;
-
   let patient_info = getPatientInfo(rowid, var_source);
   
-  // nest function in if-else to avoid duplication
-  if (patient_info.status_siasatan[0] != 'DONE') {
+  if (patient_info.status_siasatan[0] != 'DONE') {  // avoid duplication
 
-    // Logger.log('--- Configure target folder id.');
+    // STEP 1 : Prepare folder
     let today = new Date();
     let target_folder_today_id = '';
-    if (today.getDate() == var_source.range_today_date.getValue()) {
-      // use current day folder id
-      target_folder_today_id = var_source.range_tlh_folder_today.getValue(); 
-      } else {
+    if (today.getDate() == var_source.range_today_date.getValue()) {  // use current day folder id
+      target_folder_today_id = var_source.range_tlh_folder_today.getValue();
+      } else {  // generate new day folder
       target_folder_today_id = DriveApp.getFolderById(target_folder_id).createFolder(today.toDateString()).getId();
-      // update source_var : date & folder id
       var_source.range_today_date.setValue(today.getDate());
       var_source.range_tlh_folder_today.setValue(target_folder_today_id);
     }
 
-    // ---- begin to generate file ----
-    Logger.log('Begin to generate file for row: ' + rowid);
-    Logger.log('--- Generate filename');
+    // STEP 2 : Prepare file   
     let doc_filename = patient_info.nama[0];
-
-    Logger.log('--- Make copy of the newly created file from template and get its url link');
+    // Logger.log('--- Make copy of the newly created file from template and get its url link');
     let doc_obj = DriveApp.getFileById(clerking_template_id).makeCopy(doc_filename, DriveApp.getFolderById(target_folder_today_id));
-
-    Logger.log('--- Mark case as done generated and set URL Link to cell');
+    // Logger.log('--- Mark case as done generated and set URL Link to cell');
     var_source.sheet_kes_positif.getRange(rowid, patient_info.id_kes[1]).setValue('AWAITING TLH NUMBER');
     var_source.sheet_kes_positif.getRange(rowid, patient_info.status_siasatan[1]).setValue('DONE');
     var_source.sheet_kes_positif.getRange(rowid, patient_info.url_siasatan[1]).setValue(doc_obj.getUrl());
 
-    Logger.log('--- Start writing to file');
+    // STEP 3 : Writing to file
     let body = DocumentApp.openById(doc_obj.getId()).getBody();
     let table_array = body.getTables();
 
@@ -86,6 +80,7 @@ function generateBorangSiasatan(rowid, clerking_template_id) {
     tbl_11.getCell(2, 2).setText(patient_info.tarikh_siasatan[0]);   // Investigation date
     tbl_11.getCell(3, 2).setText('');                                // Investigator phone number
     
+    // STEP 4 : Change file ownership
     if (doc_obj.getOwner().getEmail() != var_source.spreadsheet_owner) {
       Logger.log('--- Change ownership to Spreadsheet owner');
       doc_obj.setOwner(var_source.spreadsheet_owner);

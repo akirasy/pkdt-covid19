@@ -1,31 +1,27 @@
 // Create topbar menu
 function onOpen() {
   SpreadsheetApp.getUi()
-  .createMenu('Admin')
+  .createMenu('COVID19 PKDT')
   .addItem('🕸 Set Google permission', 'aquireGooglePermission')
-  .addSubMenu(SpreadsheetApp.getUi().createMenu('🕸 Text formatting')
-  .addItem('⚪ To upperCase', 'toUpperCase')
-  .addItem('⚪ To oneLine', 'toOneLine')
-  .addItem('⚪ Clean IC', 'cleanIc'))
+  .addSubMenu(SpreadsheetApp.getUi().createMenu('🕸 Formatting')
+    .addItem('⚪ To upperCase', 'toUpperCase')
+    .addItem('⚪ To oneLine', 'toOneLine')
+    .addItem('⚪ Clean IC', 'cleanIc')
+    .addItem('⚪ Set formatting & validation', 'setValidationAndFormatting'))
   .addSeparator()
-  .addSubMenu(SpreadsheetApp.getUi().createMenu('🖋 Peg Penyiasat')
-      .addItem('⚪ Get info segera', 'mainInfoSegeraPenyiasat')
-      .addItem('⚪ Generate borang siasatan', 'mainGenerateBorangSiasatan'))
+  // .addSubMenu(SpreadsheetApp.getUi().createMenu('🖋 Peg Penyiasat')
+  //     .addItem('⚪ Get info segera', 'mainInfoSegeraPenyiasat')
+  //     .addItem('⚪ Generate borang siasatan', 'mainGenerateBorangSiasatan'))
   .addSubMenu(SpreadsheetApp.getUi().createMenu('🖋 Peg Epid Daerah')
       .addItem('🚷 Kes Epid selesai', 'mainGenerateLaporanEpid')
       .addItem('🚷 Undo daftar kes', 'mainUndoLaporanEpid'))
   .addSeparator()
-  .addSubMenu(SpreadsheetApp.getUi().createMenu('🛠 Sorting')
-      .addItem('⚪ Set formatting & validation', 'setValidationAndFormatting')
-      .addItem('⚪ Select greyed row', 'selectGrayEmpty')
-      .addItem('🚷 Move to archive', 'mainMoveToArchive'))
+  .addSubMenu(SpreadsheetApp.getUi().createMenu('🛠 Developer')
+      .addItem('🚷 Trigger Borang Siasatan', 'mainTriggerGenerateBorangSiasatan')
+      .addItem('🚷 Trigger Add listed user', 'mainTriggerAddListedUser')
+      .addItem('🚷 Trigger Move archive', 'mainTriggerMoveToArchive'))
   .addSubMenu(SpreadsheetApp.getUi().createMenu('🛠 Administrator')
-      .addItem('🚷 Add listed user access', 'mainAddListedUser')
-      .addItem('🚷 Remove unlisted user access', 'mainRemoveUnlistedUser'))
-  .addSubMenu(SpreadsheetApp.getUi().createMenu('🛠 Trigger')
-      .addItem('🚷 Borang Siasatan', 'mainTriggerGenerateBorangSiasatan')
-      .addItem('🚷 Add listed user', 'mainTriggerAddListedUser')
-      .addItem('🚷 Move archive', 'mainTriggerMoveToArchive'))
+      .addItem('🚷 Add listed user access', 'addUserForm'))
   .addSeparator()
   .addSubMenu(SpreadsheetApp.getUi().createMenu('🕊 About')
       .addItem('⚪ Google AppScript', 'aboutGoogleAppScript')
@@ -49,8 +45,11 @@ function mainInfoSegeraPenyiasat() {
 }
 
 function mainGenerateBorangSiasatan() {
-  let rowid = SpreadsheetApp.getCurrentCell().getRowIndex();
-  generateBorangSiasatan(rowid);
+  if (promptPassword()) {
+    let rowid = SpreadsheetApp.getCurrentCell().getRowIndex();
+    let var_source = getVarSource();
+    generateBorangSiasatan(rowid, var_source);
+  }
 }
 
 function mainGenerateLaporanEpid() {

@@ -65,8 +65,9 @@ function reuseTlhNumber(var_source) {
 function undoLaporanEpid() {
   Logger.log('Waiting for user input: Yes/No')
   let ui = SpreadsheetApp.getUi();
+  let heading = 'Make sure correct patient is choosen.';
   let message = 'This function will do these:\n 1) Rename borang siasatan to patient\'s name\n 2) Clear TLH number in its column\n 3) Remove EpidDone validation in its column\n\n Are you sure? ';
-  let result = ui.alert('Make sure correct patient is choosen.', message, ui.ButtonSet.YES_NO);
+  let result = ui.alert(heading, message, ui.ButtonSet.YES_NO);
 
   // Process the user's response.
   let user_response = new Boolean();
@@ -109,25 +110,24 @@ function generateLaporanEpid() {
   let forloop_start = selected_range.getRowIndex();
   let forloop_end = forloop_start + selected_range.getNumRows();
   for (let rowid = forloop_start; rowid < forloop_end; rowid++) {
+    Logger.log('Processing row: ' + rowid);
     let patient_info = getPatientInfo(rowid, var_source);
 
-    // set up conditional values
+    // STEP 1 : Validate all job done
     let status_siasatan_done = patient_info.status_siasatan[0] == 'DONE';
     let epid_daerah_done = patient_info.epid_daerah[0] == 'DONE';
     let status_siasatan_urlvalid = patient_info.url_siasatan[0] != '';
+    let all_job_done = status_siasatan_done && !epid_daerah_done && status_siasatan_urlvalid;
 
-    // nest function in if-else to avoid null error
-    if (status_siasatan_done && !epid_daerah_done && status_siasatan_urlvalid) {
-      Logger.log('Processing row: ' + rowid);
-      // Generate TLH number
+    if (all_job_done) {
+      // STEP 2 : Generate TLH number, rename file
       let tlh_number = writeTlhNumber(rowid);
-      // Rename file to prepend TLH number
       let file_url = patient_info.url_siasatan[0];
       let file_id = file_url.match(/[-\w]{25,}/);
       let doc_obj = DriveApp.getFileById(file_id);
       doc_obj.setName(tlh_number + ' ' + patient_info.nama[0]);
 
-      // Collect data and arrange value to target column
+      // STEP 3: Collect data and add to data array
       destination_array.push([
         '',                                    // 1. epid week
         tlh_number,                            // 2. no TLH
@@ -178,13 +178,13 @@ function generateLaporanEpid() {
         patient_info.catatan_epid[0]           // 45. catatan utk mo epid daerah
       ])
 
-      // mark as epid done
+      // STEP 4 : Mark as epid done
       var_source.sheet_kes_positif.getRange(rowid, patient_info.epid_daerah[1]).setValue('DONE');      
     } else {
       Logger.log('Skip rowid: ' + rowid);
     }
   }
-  // set value to destination range
+  // STEP 5 : Write array value to destination range
   let destination_range = var_source.sheet_laporan_epid.getRange(var_source.sheet_laporan_epid.getLastRow() + 1, 1, destination_array.length, destination_array[0].length);
   destination_range.setValues(destination_array);
 }

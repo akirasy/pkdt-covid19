@@ -17,21 +17,17 @@ function triggerGenerateBorangSiasatan() {
   Logger.log('--- Total case selected: ' + selection_criteria.length);
 
   // Operate with exec_limit
+  let exec_limit = 10;
   selection_criteria.map((item, index) => {
-    let exec_limit = 15;
     if (index < exec_limit) {
-      generateBorangSiasatan(item);
+      generateBorangSiasatan(item, var_source);
       var_source.sheet_kes_positif.getRange(item, patient_info.generate_sekarang[1]).setValue('');
     }   
   })
 }
 
 function triggerAddListedUser() {
-  addListedUser();
-}
-
-function triggerRemoveUnlistedUser() {
-  removeUnlistedUser();
+  addUserForm();
 }
 
 function triggerMoveToArchive() {
@@ -56,9 +52,10 @@ function triggerMoveToArchive() {
   Logger.log('--- Total case selected: ' + selection_criteria.length);
 
   // Operate with exec_limit
+  let exec_limit = 100;
   selection_criteria.map((item, index) => {
-    let exec_limit = 100;
     if (index < exec_limit) {
+      Logger.log(index + 1);
       moveCaseToArchive(item, var_source);
     }   
   })

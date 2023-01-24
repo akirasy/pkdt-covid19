@@ -1,102 +1,81 @@
-// Create topbar menu
 function onOpen() {
-  SpreadsheetApp.getUi()
-  .createMenu('COVID19 PKDT')
-  .addItem('🕸 Set Google permission', 'aquireGooglePermission')
-  .addSubMenu(SpreadsheetApp.getUi().createMenu('🕸 Formatting')
-    .addItem('⚪ To upperCase', 'toUpperCase')
-    .addItem('⚪ To oneLine', 'toOneLine')
-    .addItem('⚪ Clean IC', 'cleanIc')
-    .addItem('⚪ Set formatting & validation', 'setValidationAndFormatting'))
+  let ui = SpreadsheetApp.getUi();
+  ui.createMenu('COVID19')
+  .addItem('Set Google permission', 'aquireGooglePermission')
+  .addSubMenu(SpreadsheetApp.getUi().createMenu('Formatting')
+    .addItem('To upperCase', 'toUpperCase')
+    .addItem('Trim Whitespaces', 'trimWhitespace')
+    .addItem('Clean IC', 'cleanIc')
+    .addItem('Set formatting & validation', 'setValidationAndFormatting')
+  )
   .addSeparator()
-  // .addSubMenu(SpreadsheetApp.getUi().createMenu('🖋 Peg Penyiasat')
-  //     .addItem('⚪ Get info segera', 'mainInfoSegeraPenyiasat')
-  //     .addItem('⚪ Generate borang siasatan', 'mainGenerateBorangSiasatan'))
-  .addSubMenu(SpreadsheetApp.getUi().createMenu('🖋 Peg Epid Daerah')
-      .addItem('🚷 Kes Epid selesai', 'mainGenerateLaporanEpid')
-      .addItem('🚷 Undo daftar kes', 'mainUndoLaporanEpid'))
+  .addSubMenu(ui.createMenu('Peg Penyiasat')
+    .addItem('Get info segera', 'menuInfoSegeraPenyiasat')
+    .addItem('Generate borang siasatan', 'menuGenerateBorangSiasatan')
+  )
+  .addSubMenu(ui.createMenu('Peg Epid Daerah')
+    .addItem('Kes Epid selesai', 'actionGenerateLaporanEpid')
+    .addItem('Move selection to archive', 'actionMoveToArchive')
+  )
   .addSeparator()
-  .addSubMenu(SpreadsheetApp.getUi().createMenu('🛠 Developer')
-      .addItem('🚷 Trigger Borang Siasatan', 'mainTriggerGenerateBorangSiasatan')
-      .addItem('🚷 Trigger Add listed user', 'mainTriggerAddListedUser')
-      .addItem('🚷 Trigger Move archive', 'mainTriggerMoveToArchive'))
-  .addSubMenu(SpreadsheetApp.getUi().createMenu('🛠 Administrator')
-      .addItem('🚷 Add listed user access', 'addUserForm'))
-  .addSeparator()
-  .addSubMenu(SpreadsheetApp.getUi().createMenu('🕊 About')
-      .addItem('⚪ Google AppScript', 'aboutGoogleAppScript')
-      .addItem('⚪ Author', 'aboutAuthor')
-      .addItem('⚪ License', 'aboutLicense'))
+  .addSubMenu(ui.createMenu('Administrator')
+    .addSubMenu(ui.createMenu('Trigger')
+      .addItem('Borang Siasatan', 'menuTriggerGenerateBorangSiasatan')
+      .addItem('Add listed user', 'menuTriggerGrantPermission')
+      .addItem('Move to archive', 'triggerMoveToArchive')
+      .addItem('Delete greyed row', 'deleteGreyedRow')
+    )
+    .addItem('Add listed user access', 'menuGrantPermission')
+  )
+  .addSubMenu(ui.createMenu('About')
+    .addItem('Author', 'aboutAuthor')
+    .addItem('License', 'aboutLicense')
+    .addItem('Google AppScript', 'aboutGoogleAppScript')
+  )
   .addToUi();
 }
 
-function aquireGooglePermission() {
-  SpreadsheetApp.getUi().alert(
-    'Success',
-    'If you can see this. You already have permission to use this app.',
-    SpreadsheetApp.getUi().ButtonSet.OK);
-}
-
-function mainInfoSegeraPenyiasat() {
-  let rowid = SpreadsheetApp.getCurrentCell().getRowIndex();
-  let info_segera_txt = infoSegeraPenyiasat(rowid, getVarSource());
-  // Show alert box
-  SpreadsheetApp.getUi().alert('Info Segera Penyiasat.', info_segera_txt, SpreadsheetApp.getUi().ButtonSet.OK);
-}
-
-function mainGenerateBorangSiasatan() {
+/**
+ * UserMenu action to generate borang siasatan on single row/patient.
+ */
+function menuGenerateBorangSiasatan() {
   if (promptPassword()) {
+    let projectVar = getProjectVariables();
+    let headerKey = getHeaderKey(projectVar.sheetKesPositif);
     let rowid = SpreadsheetApp.getCurrentCell().getRowIndex();
-    let var_source = getVarSource();
-    generateBorangSiasatan(rowid, var_source);
-  }
+    generateBorangSiasatan(projectVar, headerKey, rowid);
+  };
 }
 
-function mainGenerateLaporanEpid() {
-  if (promptAdminUserOnly()) { 
-    generateLaporanEpid() 
-  }
+/**
+ * UserMenu action to grant permission from listed GoogleForm. Password required.
+ */
+function menuGrantPermission() {
+  if (promptPassword()) { grantPermission(); };
 }
 
-function mainUndoLaporanEpid() {
-  if (promptAdminUserOnly()) {
-    undoLaporanEpid();
-  }
+/**
+ * UserMenu action to manually trigger grant permission/access. Password required.
+ */
+function menuTriggerGrantPermission() {
+  if (promptPassword()) { grantPermission(); };
 }
 
-function mainMoveToArchive() {
-  if (promptAdminUserOnly()) {
-    let selected_range = SpreadsheetApp.getActiveRange();
-    moveToArchive(selected_range);    
-  } 
+/**
+ * UserMenu action to manually trigger generate borang siasatan. Password required.
+ */
+function menuTriggerGenerateBorangSiasatan() {
+  if (promptPassword()) { triggerGenerateBorangSiasatan(); };
 }
 
-function mainAddListedUser() { 
-  if (promptAdminUserOnly()) { 
-    addListedUser() 
-  } 
-}
-
-function mainRemoveUnlistedUser() {
-  if (promptAdminUserOnly()) {
-    removeUnlistedUser();
-  } 
-}
-
-function mainTriggerGenerateBorangSiasatan() {
-  if (promptAdminUserOnly()) {
-    triggerGenerateBorangSiasatan();
-  }
-}
-
-function mainTriggerAddListedUser() {
-  if (promptAdminUserOnly()) {
-    triggerAddListedUser();
-  }
-}
-
-function mainTriggerMoveToArchive() {
-  if (promptAdminUserOnly()) {
-    triggerMoveToArchive();
-  }
+/**
+ * UserMenu action to show infoSegera of single row/patient.
+ */
+function menuInfoSegeraPenyiasat() {
+  let projectVar =  getProjectVariables();
+  let headerKey = getHeaderKey(projectVar.sheetKesPositif);
+  let ui = SpreadsheetApp.getUi();
+  let rowid = SpreadsheetApp.getCurrentCell().getRowIndex();
+  let patientInfo = projectVar.sheetKesPositif.getRange(rowid, 1, 1, projectVar.sheetKesPositif.getMaxColumns()).getValues()[0];
+  ui.alert(infoSegeraPenyiasat(headerKey, patientInfo), ui.ButtonSet.OK);
 }

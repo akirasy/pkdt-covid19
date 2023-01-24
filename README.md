@@ -2,7 +2,8 @@
 
 ## Introduction
 
-Once a patient is diagnosed as positive COVID19, Health Official should take several actions in containing the outbreak. Healthcare worker will investigate the patient. Soon after, healthcare worker required to do contact tracing, patient report and patient referral.
+Once a patient is diagnosed as positive COVID19, Health Official should take several actions in containing the outbreak. Healthcare worker will
+investigate the patient. Soon after, healthcare worker required to do contact tracing, patient report and patient referral.
 In overcoming the difficulties of writing report and miscommunication, this app is born.
 
 ## Template links
@@ -65,10 +66,7 @@ In overcoming the difficulties of writing report and miscommunication, this app 
 ### 1. Enable AppScript on GoogleSpreadsheet
 
 1. Open up Kes Positif COVID19 (GoogleSpreadsheet).
-1. At the menu bar, open up `Extensions -> AppScript`.
-1. A new tab will open and shows `AppScript Editor`.
-1. Copy all code file [here](src/appScript/) to the `AppScript Editor`.
-1. Simply save and close tab.
+1. Click `COVID19` at topmenu bar and click `Set Google Permission`.
 
 ### 2. Edit corresponding value
 
@@ -79,7 +77,6 @@ In overcoming the difficulties of writing report and miscommunication, this app 
     - `clerking_template`        # File ID for Clerking Template (GoogleDoc)
     - `generated_folder_main`    # Folder ID for `parent-folder/generated-file/current`
     - `patient_id_prefix`        # Prefix reg number
-    - `spreadsheet_owner`        # Email
     - `request_access_form_id`   # File ID for User Access List (GoogleSpreadsheet)
     - `spreadsheet_archive_id`   # File ID for archived spreadsheet
     ```

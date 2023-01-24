@@ -1,62 +1,36 @@
+/**
+ * Trigger function -> Generate borang siasatan at intervals.
+ */
 function triggerGenerateBorangSiasatan() {
-  let var_source = getVarSource();
-  let patient_info = getPatientInfo(1, var_source);
+  let initialTime = new Date();
+  let projectVar = getProjectVariables();
+  let headerKey = getHeaderKey(projectVar.sheetKesPositif);
 
-  // Collect
-  let generate_sekarang_values = var_source.sheet_kes_positif
-    .getRange(1, patient_info.generate_sekarang[1], var_source.sheet_kes_positif.getLastRow()).getValues()
-    .map((item, index) => { return [(index+1), item[0]] });
+  let sheetKesPositif = projectVar.sheetKesPositif;
+  let genActionQue = sheetKesPositif.getRange(1, headerKey.gen_action+1, sheetKesPositif.getLastRow(), 1).getValues();
+  let selectedRowid = genActionQue.map((item, index) => { if (item[0] == 'YA') { return index+1 } });
 
-  // Select
-  let selection_criteria = new Array();
-  generate_sekarang_values.map((item, index) => {
-    if (item[1] == 'YA') {
-      selection_criteria.push(item[0]);
-    }
-  })
-  Logger.log('--- Total case selected: ' + selection_criteria.length);
-
-  // Operate with exec_limit
-  let exec_limit = 10;
-  selection_criteria.map((item, index) => {
-    if (index < exec_limit) {
-      generateBorangSiasatan(item, var_source);
-      var_source.sheet_kes_positif.getRange(item, patient_info.generate_sekarang[1]).setValue('');
-    }   
-  })
+  selectedRowid.filter(item => item).forEach(rowid => {
+    if (isEnoughTime(initialTime, 15)) {
+      generateBorangSiasatan(projectVar, headerKey, rowid);
+      sheetKesPositif.getRange(rowid, headerKey.gen_action+1).setValue('');
+    };
+  });
 }
 
-function triggerAddListedUser() {
-  addUserForm();
-}
-
+/**
+ * Trigger function -> Move entry to archive at intervals.
+ */
 function triggerMoveToArchive() {
-  let var_source = getVarSource();
-  let patient_info = getPatientInfo(1, var_source);
+  let projectVar = getProjectVariables();
+  let sheetKesPositif = projectVar.sheetKesPositif;
+  let selectedRange = sheetKesPositif.getRange(1, 1, sheetKesPositif.getLastRow());
+  moveToArchive(selectedRange);
+}
 
-  // Collect
-  let status_siasatan_done_values = var_source.sheet_kes_positif
-    .getRange(1, patient_info.status_siasatan[1], var_source.sheet_kes_positif.getLastRow()).getValues()
-    .map((item, index) => { return [(index+1), item[0]] });
-  let epid_daerah_done_values = var_source.sheet_kes_positif
-    .getRange(1, patient_info.epid_daerah[1], var_source.sheet_kes_positif.getLastRow()).getValues()
-    .map((item, index) => { return [(index+1), item[0]] });
-
-  // Select
-  let selection_criteria = new Array();
-  status_siasatan_done_values.map((item, index) => {
-    if (status_siasatan_done_values[index][1] == 'DONE' && epid_daerah_done_values[index][1] == 'DONE') {
-      selection_criteria.push(item[0]);    
-    }
-  })
-  Logger.log('--- Total case selected: ' + selection_criteria.length);
-
-  // Operate with exec_limit
-  let exec_limit = 100;
-  selection_criteria.map((item, index) => {
-    if (index < exec_limit) {
-      Logger.log(index + 1);
-      moveCaseToArchive(item, var_source);
-    }   
-  })
+/**
+ * Trigger function -> Add requesting access to user at intervals.
+ */
+function triggerGrantPermission() {
+  grantPermission();
 }

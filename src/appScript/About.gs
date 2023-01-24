@@ -1,9 +1,12 @@
+/**
+ * Show about app license.
+ */
 function aboutLicense() {
   let title = 'Open Source';
   let subtitle = `
     This app is open source and free to use under the terms of GNU General Public License v3.0.
 
-    Copyright (C) 2021  akirasy
+    Copyright (C) 2023  akirasy
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -18,6 +21,9 @@ function aboutLicense() {
   SpreadsheetApp.getUi().alert(title, subtitle, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
+/**
+ * Show about app author.
+ */
 function aboutAuthor() {
   let title = 'AppScript Author';
   let subtitle = `
@@ -29,6 +35,9 @@ function aboutAuthor() {
   SpreadsheetApp.getUi().alert(title, subtitle, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
+/**
+ * Show about Google AppScript.
+ */
 function aboutGoogleAppScript() {
   let title = 'Google AppScript';
   let subtitle = `

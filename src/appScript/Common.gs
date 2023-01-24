@@ -1,101 +1,60 @@
-function getVarSource() {
-  // init var from sheet: {appScript.gs}
-  let active_spreadsheet        = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet_var_source          = active_spreadsheet.getSheetByName('appScript.gs');
-
-  let spreadsheet_owner         = sheet_var_source.getRange('B14').getValue();
-  let request_access_form_id    = sheet_var_source.getRange('B15').getValue();
-  let spreadsheet_archive_id    = sheet_var_source.getRange('B16').getValue();
-  
-  let sheet_kes_positif         = active_spreadsheet.getSheetByName(sheet_var_source.getRange('B4').getValue());
-  let sheet_kes_positif_archive = active_spreadsheet.getSheetByName(sheet_var_source.getRange('B5').getValue());
-  let sheet_laporan_epid        = active_spreadsheet.getSheetByName(sheet_var_source.getRange('B6').getValue());
-  let sheet_laporan_cac         = active_spreadsheet.getSheetByName(sheet_var_source.getRange('B7').getValue());
-  let sheet_cac_pending         = active_spreadsheet.getSheetByName(sheet_var_source.getRange('B8').getValue());
-
-  let path_clerking_template    = sheet_var_source.getRange('B11').getValue();
-  let path_tlh_folder           = sheet_var_source.getRange('B12').getValue();
-  
-  let range_tlh_prefix          = sheet_var_source.getRange('B13');
-  let range_tlh_max             = sheet_var_source.getRange('B19');
-  let range_tlh_folder_today    = sheet_var_source.getRange('B20');
-  let range_today_date          = sheet_var_source.getRange('B21');
-  let range_unused_tlh          = sheet_var_source.getRange('D4:D40');
-
-  let var_source_json = {
-    'sheet_var_source'          : sheet_var_source,
-    'spreadsheet_owner'         : spreadsheet_owner,
-    'request_access_form_id'    : request_access_form_id,
-    'spreadsheet_archive_id'    : spreadsheet_archive_id,
-    'sheet_kes_positif'         : sheet_kes_positif,
-    'sheet_kes_positif_archive' : sheet_kes_positif_archive,
-    'sheet_laporan_epid'        : sheet_laporan_epid,
-    'sheet_laporan_cac'         : sheet_laporan_cac,
-    'sheet_cac_pending'         : sheet_cac_pending,
-    'path_clerking_template'    : path_clerking_template,
-    'path_tlh_folder'           : path_tlh_folder,
-    'range_tlh_prefix'          : range_tlh_prefix,
-    'range_tlh_max'             : range_tlh_max,
-    'range_tlh_folder_today'    : range_tlh_folder_today,
-    'range_today_date'          : range_today_date,
-    'range_unused_tlh'          : range_unused_tlh
-  }
-  
-  return var_source_json;
+/**
+ * Initialize set variable in `appscript.gs` sheet and return as `key:value` object/dictionary.
+ */
+function getProjectVariables() {
+  let activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  let sheetAppscript = activeSpreadsheet.getSheetByName('appScript.gs');
+  let output = {
+    // sheetName
+    sheetAppscript         : sheetAppscript,
+    sheetKesPositif        : activeSpreadsheet.getSheetByName(sheetAppscript.getRange('B4').getValue()),
+    sheetKesPositifArchive : activeSpreadsheet.getSheetByName(sheetAppscript.getRange('B5').getValue()),
+    sheetLaporanEpid       : activeSpreadsheet.getSheetByName(sheetAppscript.getRange('B6').getValue()),
+    // googleDoc output
+    valueClerkingTemplateId      : sheetAppscript.getRange('B10').getValue(),
+    valueGeneratedFolderMain     : sheetAppscript.getRange('B11').getValue(),
+    rangeGeneratedFolderToday    : sheetAppscript.getRange('B12'),
+    rangeTodayDate               : sheetAppscript.getRange('B13'),
+    // case registration
+    valuePatientIdPrefix  : sheetAppscript.getRange('B17').getValue(),
+    rangePatientIdCurrent : sheetAppscript.getRange('B18'),
+    // permission
+    valueReqAccessFormId      : sheetAppscript.getRange('B22').getValue(),
+    valueThisSpreadsheetId    : sheetAppscript.getRange('B23').getValue(),
+    valueArchiveSpreadsheetId : sheetAppscript.getRange('B24').getValue(),
+  };
+  return output
 }
 
-function getPatientInfo(rowid, var_source) {
-  let selected_patient = var_source.sheet_kes_positif.getRange(rowid, 1, 1, var_source.sheet_kes_positif.getMaxColumns()).getValues();
-  let selected_patient_values = selected_patient[0].map(item => { return parseDate(item) });
+/**
+ * Get header key index value and return as `name:index` object/dictionary.
+ * @param {Object} sheetObj The spreadsheet object to read from.
+ */
+function getHeaderKey(sheetObj) {
+  let output = new Object();
+  let headerKey = sheetObj.getRange(1, 1, 1, sheetObj.getMaxColumns()).getValues();
+  headerKey[0].forEach((item, index) => { output[item] = index });
+  return output
+}
 
-  let patient_info_json = {
-    'tarikh_notifikasi'       : [selected_patient_values[ 0],  1],
-    'kk_referral'             : [selected_patient_values[ 1],  2],
-    'pegawai_referral'        : [selected_patient_values[ 2],  3],
-    'pegawai_penyiasat'       : [selected_patient_values[ 3],  4],
-    'catatan_pencarian'       : [selected_patient_values[ 4],  5],
-    'id_kes'                  : [selected_patient_values[ 5],  6],
-    'nama'                    : [selected_patient_values[ 6],  7],
-    'ic'                      : [selected_patient_values[ 7],  8],
-    'umur'                    : [selected_patient_values[ 8],  9],
-    'jantina'                 : [selected_patient_values[ 9], 10],
-    'alamat'                  : [selected_patient_values[10], 11],
-    'phone'                   : [selected_patient_values[11], 12],
-    'tarikh_sampel'           : [selected_patient_values[12], 13],
-    'status_sampel'           : [selected_patient_values[13], 14],
-    'ctval_rdrp'              : [selected_patient_values[14], 15],
-    'ctval_n'                 : [selected_patient_values[15], 16],
-    'ctval_orf'               : [selected_patient_values[16], 17],
-    'fasiliti_makmal'         : [selected_patient_values[17], 18],
-    'jenis_ujian'             : [selected_patient_values[18], 19],
-    'tarikh_dinilai'          : [selected_patient_values[19], 20],
-    'catatan_umum'            : [selected_patient_values[20], 21],
-    'comorbid'                : [selected_patient_values[21], 22],
-    'bmi'                     : [selected_patient_values[22], 23],
-    'covid_category'          : [selected_patient_values[23], 24],
-    'status_vaksin'           : [selected_patient_values[24], 25],
-    'jenis_vaksin'            : [selected_patient_values[25], 26],
-    'admit'                   : [selected_patient_values[26], 27],
-    'rawatan_paxlovid'        : [selected_patient_values[27], 28],
-    'bangsa'                  : [selected_patient_values[28], 29],
-    'warganegara'             : [selected_patient_values[29], 30],
-    'mukim'                   : [selected_patient_values[30], 31],
-    'jenis_saringan'          : [selected_patient_values[31], 32],
-    'pekerjaan'               : [selected_patient_values[32], 33],
-    'tarikh_onset'            : [selected_patient_values[33], 34],
-    'jenis_gejala'            : [selected_patient_values[34], 35],
-    'catatan_siasatan'        : [selected_patient_values[35], 36],
-    'nama_kes_indeks'         : [selected_patient_values[36], 37],
-    'bilangan_kontak_rapat'   : [selected_patient_values[37], 38],
-    'kategori_jangkitan'      : [selected_patient_values[38], 39],
-    'tarikh_siasatan'         : [selected_patient_values[39], 40],
-    'nama_penyiasat'          : [selected_patient_values[40], 41],
-    'jawatan_penyiasat'       : [selected_patient_values[41], 42],
-    'generate_sekarang'       : [selected_patient_values[42], 43],
-    'url_siasatan'            : [selected_patient_values[43], 44],
-    'status_siasatan'         : [selected_patient_values[44], 45],
-    'epid_daerah'             : [selected_patient_values[45], 46],
-    'catatan_epid'            : [selected_patient_values[46], 47]
-  }
-  return patient_info_json
+/**
+ * Check if still enough time to run another process. Appscript only allow 6 minutes of execution time.
+ * @param {Date} initialTime Instance of `new Date()` from the initial execution time.
+ * @param {Number} processDuration Estimated time (in seconds) for the process to complete
+ */
+function isEnoughTime(initialTime, processDuration) {
+  let currentTime = new Date();
+  let milisecondsDifference = currentTime.getTime() - initialTime.getTime();
+  let secondsLeft = 360 - (milisecondsDifference / 1000);
+  return secondsLeft > processDuration ? true : false;
+}
+
+/**
+ * Check if user has allow permission to run this app.
+ */
+function aquireGooglePermission() {
+  SpreadsheetApp.getUi().alert(
+    'Success',
+    'If you can see this. You already have permission to use this app.',
+    SpreadsheetApp.getUi().ButtonSet.OK);
 }

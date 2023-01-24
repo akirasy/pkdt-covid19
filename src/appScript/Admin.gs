@@ -1,81 +1,120 @@
-// Move completed case to archive
-function moveToArchive(selected_range) {
-  let var_source = getVarSource();
+/**
+ * Move completed/done case to archive Sheet.
+ * @param {Range} selectedRange Range to evaluate and move to archive.
+ */
+function moveToArchive(selectedRange) {
+  let initialTime = new Date();
+  let projectVar             = getProjectVariables();
+  let headerKey              = getHeaderKey(projectVar.sheetKesPositif);
+  let sheetKesPositif        = projectVar.sheetKesPositif;
+  let sheetKesPositifArchive = projectVar.sheetKesPositifArchive;
+  let selectedRowIndex       = selectedRange.getRowIndex();
 
-  let forloop_start = selected_range.getRowIndex();
-  let forloop_end = forloop_start + selected_range.getNumRows();
-  for (let rowid = forloop_start; rowid < forloop_end; rowid++) {
-    // Check if all are done
-    let patient_info = getPatientInfo(rowid, var_source);
-    let status_siasatan_done = patient_info.status_siasatan[0] == 'DONE';
-    let epid_daerah_done = patient_info.epid_daerah[0] == 'DONE';    
-
-    // Move completed case to archive
-    if (status_siasatan_done && epid_daerah_done) {
-      moveCaseToArchive(rowid, var_source);
-    } else { Logger.log('--- Skip rowid: ' + rowid); }
-  }
+  let conditionalArray = sheetKesPositif.getRange(selectedRowIndex, headerKey.gen_url+1, selectedRange.getNumRows(), 3).getValues();
+  let selectedRowid = conditionalArray.map((item, index) => {
+    if (item[0] != '' && item[1] == 'DONE' && item[2] == 'DONE') {
+      let rowid = index + selectedRowIndex;
+      return rowid
+    };
+  });
+  selectedRowid.filter(item => item).forEach(rowid => {
+    if (isEnoughTime(initialTime, 10)) {
+      Logger.log('-- Move case to archive for rowid: ' + rowid)
+      let doneCase = sheetKesPositif.getRange(rowid, 1, 1, sheetKesPositif.getLastColumn());
+      let targetSheetArchive = sheetKesPositifArchive.getRange(sheetKesPositifArchive.getLastRow()+1, 1);
+      doneCase.copyTo(targetSheetArchive);
+      doneCase.clear();
+      doneCase.setBackground('#cccccc');
+    };
+  });
 }
 
-function moveCaseToArchive(rowid, var_source) {
-  Logger.log('-- Move case to archive for rowid: ' + rowid);
-  // Logger.log('----- Select row range: Pending');
-  let patient_row_range = var_source.sheet_kes_positif.getRange(rowid, 1, 1, var_source.sheet_kes_positif.getMaxColumns());
-  // Logger.log('-------- Select row range: Done');
-  Logger.log('----- Choose last range at archive: Pending');
-  let last_archive_range = var_source.sheet_kes_positif_archive.getRange(var_source.sheet_kes_positif_archive.getLastRow() + 1, 1);
-  Logger.log('-------- Choose last range at archive: Done');
-  // Logger.log('----- Copy to archive: Pending');
-  patient_row_range.copyTo(last_archive_range);
-  // Logger.log('-------- Copy to archive: Done');
-  // Logger.log('----- Clearing row range: Pending');  
-  patient_row_range.clear();
-  // Logger.log('-------- Clearing row range: Done');
-  // Logger.log('----- Set gray background: Pending');
-  patient_row_range.setBackground('#cccccc')
-  // Logger.log('-------- Set gray background: Done');
-}
+/**
+ * Grant permission for edit and view from requesting user at GoogleForm.
+ */
+function grantPermission() {
+  let projectVar         = getProjectVariables();
+  let activeSpreadsheet  = SpreadsheetApp.getActiveSpreadsheet();
+  let archiveSpreadsheet = DriveApp.getFileById(projectVar.valueArchiveSpreadsheetId);
+  let driveFolder        = DriveApp.getFolderById(projectVar.valueGeneratedFolderMain);
 
-function addUserForm() {
-  let var_source = getVarSource();
-  let active_spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  let spreadsheet_archive = SpreadsheetApp.openById(var_source.spreadsheet_archive_id);
-  let drive_folder = DriveApp.getFolderById(var_source.path_tlh_folder);
+  // STEP 1 : Get current user
+  let activeSpreadsheetUser  = activeSpreadsheet.getEditors().map(user => { return user.getEmail().toLowerCase() });
+  let archiveSpreadsheetUser = archiveSpreadsheet.getEditors().map(user => { return user.getEmail().toLowerCase() });
+  let driveFolderUser        = driveFolder.getEditors().map(user => { return user.getEmail().toLowerCase() });
 
-  // === Get actual user
-  Logger.log('Get actual user');
-  let active_spreadsheet_user = active_spreadsheet.getEditors().map(user => { return user.getEmail().toLowerCase() });
-  let spreadsheet_archive_user = spreadsheet_archive.getViewers().map(user => { return user.getEmail().toLowerCase() });
-  let drive_folder_user = drive_folder.getEditors().map(user => { return user.getEmail().toLowerCase() });
+  // STEP 2 : Get requesting user from GoogleForm
+  let requestAccessForm = FormApp.openById(projectVar.valueReqAccessFormId);
+  let formResponses = requestAccessForm.getResponses();
+  let requestingUser = formResponses.map(item => {
+    return item.getRespondentEmail().toLowerCase();
+  });
 
-  // === Get requesting user
-  let listed_editor = new Array();
-  let request_access_form = FormApp.openById(var_source.request_access_form_id);
-  let form_responses = request_access_form.getResponses();
-  form_responses.forEach(item => {
-    listed_editor.push(item.getRespondentEmail());
-  })
-
-  // === Filter requesting user
-  Logger.log('Check if user is listed and then add to awaiting list');
-  let list_awaiting = new Array();
-  listed_editor.forEach(user => {
-    if ( !active_spreadsheet_user.includes(user) || !spreadsheet_archive_user.includes(user) || !drive_folder_user.includes(user) ) {
-      list_awaiting.push(user);
-    }
-  })
-  Logger.log('--- Number of user in awaiting list: ' + list_awaiting.length);
-  Logger.log('--- New user listed\n' + list_awaiting.toString());
-
-  // === Add user with email validation
-  list_awaiting.map(user => {
+  // STEP 3 : Grant permission
+  requestingUser.forEach(user => {
     try {
-      Logger.log('Adding user: ' + user);
-      active_spreadsheet.addEditor(user);
-      spreadsheet_archive.addViewer(user);
-      drive_folder.addEditor(user);
-    } catch(e) {
+      if (!activeSpreadsheetUser.includes(user)) {
+        activeSpreadsheet.addEditor(user);
+      };
+      if (!archiveSpreadsheetUser.includes(user)) {
+        archiveSpreadsheet.addViewer(user);
+      };
+      if (!driveFolderUser.includes(user)) {
+        driveFolder.addEditor(user);
+      };
+    } catch {
       Logger.log('Invalid email: ' + user);
-    }
-  })
+    };
+  });
+}
+
+/**
+ * Action to move completed/done case to archive Sheet.
+ */
+function actionMoveToArchive() {
+  let selectedRange = SpreadsheetApp.getActiveRange();
+  moveToArchive(selectedRange);
+}
+
+/**
+ * Prompt user for password before further execution. Returns `boolean`.
+ */
+function promptPassword() {
+  Logger.log('Waiting for user input: Yes/No');
+  let ui = SpreadsheetApp.getUi();
+  let response = ui.prompt('Password protected command', 'Please enter password.', ui.ButtonSet.YES_NO);
+  let password = '123qwe';
+
+  // Process the user's response.
+  let allowUsage;
+  let correctPassword = response.getResponseText() == password;
+  if (response.getSelectedButton() == ui.Button.YES && correctPassword) {
+    allowUsage = true;
+  } else if (response.getSelectedButton() == ui.Button.NO) {
+    allowUsage = false;
+    ui.alert('Thank you', 'Script exited safely.', ui.ButtonSet.OK);
+  } else {
+    allowUsage = false;
+    ui.alert('Access denied', 'Wrong password!', ui.ButtonSet.OK);
+  }
+  return allowUsage
+}
+
+function deleteGreyedRow() {
+  let initialTime = new Date();
+  let projectVar = getProjectVariables();
+  let sheetKesPositif = projectVar.sheetKesPositif;
+  let allRow = sheetKesPositif.getRange(1,1,sheetKesPositif.getLastRow());
+  let greyedRowA1Notation = allRow.getBackgrounds().map((item, index) => {
+    if (item[0] == '#cccccc') {
+      let a1Notation = (index+1).toString() + ':' + (index+1).toString();
+      return a1Notation
+    };
+  });
+  greyedRowA1Notation.filter(item => item).reverse().forEach(item => {
+    if (isEnoughTime(initialTime, 1)) {
+      Logger.log('Delete rowid: ' + item);
+      sheetKesPositif.getRange(item).deleteCells(SpreadsheetApp.Dimension.ROWS);
+    };
+  });
 }

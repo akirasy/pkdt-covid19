@@ -40,7 +40,7 @@ function grantPermission() {
 
   // STEP 1 : Get current user
   let activeSpreadsheetUser  = activeSpreadsheet.getEditors().map(user => { return user.getEmail().toLowerCase() });
-  let archiveSpreadsheetUser = archiveSpreadsheet.getEditors().map(user => { return user.getEmail().toLowerCase() });
+  let archiveSpreadsheetUser = archiveSpreadsheet.getViewers().map(user => { return user.getEmail().toLowerCase() });
   let driveFolderUser        = driveFolder.getEditors().map(user => { return user.getEmail().toLowerCase() });
 
   // STEP 2 : Get requesting user from GoogleForm
@@ -55,12 +55,15 @@ function grantPermission() {
     try {
       if (!activeSpreadsheetUser.includes(user)) {
         activeSpreadsheet.addEditor(user);
+        Logger.log('Grant Active Spreadsheet edit access for: ' + user);
       };
       if (!archiveSpreadsheetUser.includes(user)) {
         archiveSpreadsheet.addViewer(user);
+        Logger.log('Grant Archive Spreadsheet edit access for: ' + user);
       };
       if (!driveFolderUser.includes(user)) {
         driveFolder.addEditor(user);
+        Logger.log('Grant Folder edit access for: ' + user);
       };
     } catch {
       Logger.log('Invalid email: ' + user);
